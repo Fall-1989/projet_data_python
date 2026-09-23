@@ -62,6 +62,8 @@ for p in personnes:
     print(iris.loc[0:3, "sepallength"])
     print(iris["sepallength"]>7.0)
 #Exporter les données nottoyer et traiter dans un fichier excel
+#with pd.ExcelWriter("Fichier personne.xlsx", engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+    #pd.to_excel(writer, sheet_name="data_iris", index=false) 
 
 #la visualisation des données avec pandas
 import seaborn as sns
