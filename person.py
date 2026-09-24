@@ -1,4 +1,5 @@
 import openpyxl
+from openpyxl import load_workbook
 import pandas as pd
 
 class Person:
@@ -36,6 +37,13 @@ for p in personnes:
     url = "https://raw.githubusercontent.com/Fall-1989/projet_data_python/refs/heads/master/dataset_61_iris.csv"
 
     iris = pd.read_csv(url)
+    print("---Information avant nettoyage ---")
+    print("f Nombre de lignes initiales : {len(iris)}")
+    print(f" Nombre de doublon : {iris.duplicated().sum}")
+    print("Valeur manquantes par colonne :")
+    print(iris.isnull().sum())
+    print("-" * 40)
+
     print(iris.head())
     print(iris.head(3))
     print(iris.tail(3))
@@ -48,39 +56,77 @@ for p in personnes:
 #Montron la dimention du tableau de données
     print(iris.shape)
 
-#Calcul des statistique descriptives
-    print(iris.describe())
+#Suppression des doublons
+iris_nettoye = iris.drop_duplicates()
+
+#Remplacements des valeurs manquant par la moyenne (pour les colonnes numériques)
+#Sélection des collonne numérique uniquement
+colonnes_numeriques = iris_nettoye.select_dtypes(include=['float64', 'int64']).columns
+
+#Imputation par la moyenne
+for col in colonnes_numeriques:
+    moyenne_colonne = iris_nettoye[col].mean()
+    iris_nettoye[col] = iris_nettoye[col].fillna(moyenne_colonne)
+
+    print("---Information apres nettoyage ---")
+    print("f Nombre de lignes restantes : {len(iris_nettoye)}")
+    print("Valeur manquantes restantes :")
+    print(iris_nettoye.isnull().sum())
+    print("-" * 40)
+
+#Calcul des statistique descriptives sur les données nettoyées
+    print(iris_nettoye.describe())
 
 #Calcul séparé de la moyenne et médiane
-    print(iris.mean(numeric_only=True))
-    print(iris.median(numeric_only=True))
+    print(iris_nettoye.mean(numeric_only=True))
+    print(iris_nettoye.median(numeric_only=True))
+
+#Traitement des données (calcul des statistique)
+mean_df = iris_nettoye.mean(numeric_only=True).to_frame(name="Monyenne") 
+median_df = iris_nettoye.median(numeric_only=True).to_frame(name="Médiane")   
+std_df = iris_nettoye.std(numeric_only=True).to_frame(name="Ecart-Type")
+min_df = iris_nettoye.min(numeric_only=True).to_frame(name="Minimum")
+max_df = iris_nettoye.max(numeric_only=True).to_frame(name="Maximum")
+
+#Combinaison de tous les statistique dans un seul DataFrame synthétique
+iris_stats = pd.concat([mean_df, median_df, std_df, min_df, max_df], axis=1)
+iris_stats.index.name = "Variable"
+
+#Affichage des résultats dans le console
+print("---Statistique calculées---")
+print(iris_stats)
 
 #accés au élément du colones sepalleegth
-    iris.sepallength
-    print(iris["sepallength"])
-    print(iris.loc[0, "sepallength"])
-    print(iris.loc[0:3, "sepallength"])
-    print(iris["sepallength"]>7.0)
+iris_nettoye.sepallength
+print(iris_nettoye["sepallength"])
+print(iris_nettoye.loc[0, "sepallength"])
+print(iris_nettoye.loc[0:3, "sepallength"])
+print(iris_nettoye["sepallength"]>4.0)
+
 #Exporter les données nottoyer et traiter dans un fichier excel
-#with pd.ExcelWriter("Fichier personne.xlsx", engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
-    #pd.to_excel(writer, sheet_name="data_iris", index=false) 
+mon_fichier_excel = "Fichier personne.xlsx"
+feuille2 = "Iris_Traite"
+with pd.ExcelWriter(mon_fichier_excel, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
+    iris_stats.to_excel(writer, sheet_name=feuille2, index=False) 
+
+#print(f"Les données traitées ont été exportées avec succes dans la feuille '{feuille2}' du fichier '{mon_fichier_excel}'.")
 
 #la visualisation des données avec pandas
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 #Basic plots
-iris.plot()
-iris.hist()
-iris.boxplot()
+#iris.plot()
+#iris.hist()
+#iris.boxplot()
 
 #advanced plots with 'plot' objet
-iris.plot.scatter(x='sepallength', y='sepalwidth')
+#iris.plot.scatter(x='sepallength', y='sepalwidth')
 
 #plots with seaboern
-sns.pairplot(iris)
-sns.pairplot(iris, hue='class')
-plt.show()
+#sns.pairplot(iris)
+#sns.pairplot(iris, hue='class')
+#plt.show()
 
 
 
