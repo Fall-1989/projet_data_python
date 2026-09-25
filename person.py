@@ -1,5 +1,6 @@
 import openpyxl
 from openpyxl import load_workbook
+import psycopg
 import pandas as pd
 
 class Person:
@@ -31,30 +32,61 @@ for p in personnes:
 
     wb.save("Fichier personne.xlsx")
     print("Fichier personnes.xlsx créé avec succes.")
-    
+
+#inserer les personnes dans une base de postgresql BD_personne
+#Parametre de connexion a PostgreSQL 
+DB_CONFIG = {
+   "dbname": "BD_Personne",
+   "user": "postgres",
+   "password": "F@ll1989",
+   "host": "localhost",
+   "port": "5432",
+}
+
+#connexion et insertion des données
+with psycopg.connect(**DB_CONFIG) as conn:
+        with conn.cursor() as cur:
+            #conversion du tableau d'objets en liste de tuples
+            donnes = [(p.prenom, p.nom, p.age) for p in personnes]
+
+            #Requete d'insertion dans la table existant "personne"
+            query = """
+            INSERT INTO personne (prenom, nom, age)
+            VALUES (%s, %s, %s)
+            """
+
+            #on execute l'insetion des données
+            cur.executemany(query, donnes)
+
+            #Insertion en masse
+            conn.commit()
+
+            print(f"Succés : {len(personnes)} personnes ajoutées a la table.")
+
+
     #ETL sur les données d'iris traitement en straiming
-    import pandas as pd
-    url = "https://raw.githubusercontent.com/Fall-1989/projet_data_python/refs/heads/master/dataset_61_iris.csv"
+import pandas as pd
+url = "https://raw.githubusercontent.com/Fall-1989/projet_data_python/refs/heads/master/dataset_61_iris.csv"
 
-    iris = pd.read_csv(url)
-    print("---Information avant nettoyage ---")
-    print("f Nombre de lignes initiales : {len(iris)}")
-    print(f" Nombre de doublon : {iris.duplicated().sum}")
-    print("Valeur manquantes par colonne :")
-    print(iris.isnull().sum())
-    print("-" * 40)
+iris = pd.read_csv(url)
+print("---Information avant nettoyage ---")
+print("f Nombre de lignes initiales : {len(iris)}")
+print(f" Nombre de doublon : {iris.duplicated().sum}")
+print("Valeur manquantes par colonne :")
+print(iris.isnull().sum())
+print("-" * 40)
 
-    print(iris.head())
-    print(iris.head(3))
-    print(iris.tail(3))
+print(iris.head())
+print(iris.head(3))
+print(iris.tail(3))
 
-    print(iris.dtypes)
+print(iris.dtypes)
 
-    print(iris.columns)
-    print(iris.index)
+print(iris.columns)
+print(iris.index)
 
 #Montron la dimention du tableau de données
-    print(iris.shape)
+print(iris.shape)
 
 #Suppression des doublons
 iris_nettoye = iris.drop_duplicates()
@@ -107,26 +139,29 @@ print(iris_nettoye["sepallength"]>4.0)
 mon_fichier_excel = "Fichier personne.xlsx"
 feuille2 = "Iris_Traite"
 with pd.ExcelWriter(mon_fichier_excel, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
-    iris_stats.to_excel(writer, sheet_name=feuille2, index=False) 
+    iris_nettoye.to_excel(writer, sheet_name=feuille2, index=False) 
+ligne_depart = len(iris_nettoye) + 3
+with pd.ExcelWriter(mon_fichier_excel, engine="openpyxl", mode="a", if_sheet_exists="overlay",) as writer:
+    iris_stats.to_excel(writer, sheet_name=feuille2, startrow=ligne_depart, index=True) 
 
-#print(f"Les données traitées ont été exportées avec succes dans la feuille '{feuille2}' du fichier '{mon_fichier_excel}'.")
+print(f"Les données traitées ont été exportées avec succes dans la" f" feuille '{feuille2}' .")
 
 #la visualisation des données avec pandas
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-#Basic plots
-#iris.plot()
-#iris.hist()
-#iris.boxplot()
+#Graphique de base
+iris.plot()
+iris.hist()
+iris.boxplot()
 
-#advanced plots with 'plot' objet
-#iris.plot.scatter(x='sepallength', y='sepalwidth')
+#Graphiques avancés avec l'objet 'plot'
+iris.plot.scatter(x='sepallength', y='sepalwidth')
 
-#plots with seaboern
-#sns.pairplot(iris)
-#sns.pairplot(iris, hue='class')
-#plt.show()
+#Tracés avec seaborn
+sns.pairplot(iris)
+sns.pairplot(iris, hue='class')
+plt.show()
 
 
 
