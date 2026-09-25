@@ -2,6 +2,8 @@ import openpyxl
 from openpyxl import load_workbook
 import psycopg
 import pandas as pd
+import os 
+from dotenv import load_dotenv
 
 class Person:
     def __init__(self, nom, prenom, age):
@@ -34,13 +36,15 @@ for p in personnes:
     print("Fichier personnes.xlsx créé avec succes.")
 
 #inserer les personnes dans une base de postgresql BD_personne
+#Charger les variables du fichier .env
+load_dotenv()
 #Parametre de connexion a PostgreSQL 
 DB_CONFIG = {
-   "dbname": "BD_Personne",
-   "user": "postgres",
-   "password": "F@ll1989",
-   "host": "localhost",
-   "port": "5432",
+   "dbname": os.getenv("DB_NAME"),
+   "user": os.getenv("DB_USER"),
+   "password": os.getenv("DB_PASSWORD"),
+   "host": os.getenv("DB_HOST"),
+   "port": os.getenv("DB_PORT"),
 }
 
 #connexion et insertion des données
